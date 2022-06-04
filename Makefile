@@ -31,7 +31,7 @@ dropTag:
 	@git tag -d $(tag)
 	@git push origin :refs/tags/$(tag)
 
-updateTag:dropTag tag
+updateTag:dropTag addtag
 
 test:
 	@cd $(d)/$(sub) && cargo test
