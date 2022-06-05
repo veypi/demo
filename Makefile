@@ -33,9 +33,10 @@ updateTag:dropTag addtag
 
 
 d=proc-macro-workshop
-f=$(shell ls $(d)/$(sub)/tests | grep 01 | awk -F '-' '/$(version)/ {print $0}')
+f=$(shell ls $(d)/$(tag1)/tests | grep 01 | awk -F '-' '/$(version)/ {print $0}')
 macro/test:
-	@cd $(d)/$(sub) && cargo test
+	@echo running $(f)
+	@cd $(d)/$(tag1) && cargo test
 
 macro/expand:
 	@cd $(d) && cargo expand
