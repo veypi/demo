@@ -29,7 +29,7 @@ dropTag:
 	@git tag -d $(tag)
 	@git push origin :refs/tags/$(tag)
 
-updateTag:dropTag addtag
+updateTag:dropTag tag
 
 
 d=proc-macro-workshop
