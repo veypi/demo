@@ -1,29 +1,27 @@
 branch=$(strip $(shell awk -F ':' '/branch/ {print $$2;}' cfg.yml))
-version=$(strip $(shell awk -F ':' '/version/ {print $$2;}' cfg.yml))
-sub=$(strip $(shell awk -F ':' '/sub/ {print $$2;}' cfg.yml))
-d=proc-macro-workshop
-f=$(shell ls $(d)/$(sub)/tests | grep 01 | awk -F '-' '/$(version)/ {print $0}')
-tagname=$(strip $(t))
+tag0=$(strip $(shell awk -F ':' '/tag0/ {print $$2;}' cfg.yml))
+tag1=$(strip $(shell awk -F ':' '/tag1/ {print $$2;}' cfg.yml))
+tag2=$(strip $(shell awk -F ':' '/tag2/ {print $$2;}' cfg.yml))
+
+tag=$(branch)-$(tag0)-$(tag1)-$(tag2)
 
 
-tag=$(branch)-$(sub)-$(version)
 version:
-	@echo "branch:    " $(branch)
-	@echo "tag:       " $(tag)
-	@echo "test file: " $(sub)/tests/$(f)
+	@echo $(tag)
 
 tags:
 	@git tag -l | grep $(branch)
 
-tag:
+tagname=$(strip $(t))
+gotag:
 ifeq ($(tagname),)
-	@echo please use: make tag t=TagName
+	@echo please use: make gotag t=TagName
 else
 	@echo checkout to tag $(tagname)
-	@git checkout -b $(tagname) tagname
+	@git checkout -b $(tagname) $(tagname)
 endif
 
-addtag:
+tag:
 	@git tag $(tag)
 	@git push origin $(tag)
 
@@ -33,10 +31,12 @@ dropTag:
 
 updateTag:dropTag addtag
 
-test:
+
+d=proc-macro-workshop
+f=$(shell ls $(d)/$(sub)/tests | grep 01 | awk -F '-' '/$(version)/ {print $0}')
+macro/test:
 	@cd $(d)/$(sub) && cargo test
 
-expand:
+macro/expand:
 	@cd $(d) && cargo expand
 
-run:test expand

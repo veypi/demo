@@ -1,4 +1,5 @@
-branch: rust_marco
-version: 01
-sub: builder
+branch: rust
+tag0: macro
+tag1: builder
+tag2: 01
 

@@ -1,16 +1,15 @@
-# Hello, Rust Marco
+# Hello, Rust Macro
 
 
 
 ## 便捷指令
 
 ```bash
-# 查看当前分析对象
+# 查看当前版本
 make version
 # 运行测试
-make test
+make macro/test
 # 查看派生代码
-make expand
+make macro/expand
 
 ```
-
