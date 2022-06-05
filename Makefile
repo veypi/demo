@@ -1,9 +1,9 @@
 branch=$(strip $(shell awk -F ':' '/branch/ {print $$2;}' cfg.yml))
-tag0=$(strip $(shell awk -F ':' '/tag0/ {print $$2;}' cfg.yml))
-tag1=$(strip $(shell awk -F ':' '/tag1/ {print $$2;}' cfg.yml))
-tag2=$(strip $(shell awk -F ':' '/tag2/ {print $$2;}' cfg.yml))
+v0=$(strip $(shell awk -F ':' '/tag0/ {print $$2;}' cfg.yml))
+v1=$(strip $(shell awk -F ':' '/tag1/ {print $$2;}' cfg.yml))
+v2=$(strip $(shell awk -F ':' '/tag2/ {print $$2;}' cfg.yml))
 
-tag=$(branch)-$(tag0)-$(tag1)-$(tag2)
+tag=$(branch)-$(v0)-$(v1)-$(v2)
 
 
 version:
@@ -33,10 +33,10 @@ updateTag:dropTag tag
 
 
 d=proc-macro-workshop
-f=$(shell ls $(d)/$(tag1)/tests | grep 01 | awk -F '-' '/$(version)/ {print $0}')
+f=$(shell ls $(d)/$(v1)/tests | grep 01 | awk -F '-' '/$(version)/ {print $0}')
 macro/test:
 	@echo running $(f)
-	@cd $(d)/$(tag1) && cargo test
+	@cd $(d)/$(v1) && cargo test
 
 macro/expand:
 	@cd $(d) && cargo expand
