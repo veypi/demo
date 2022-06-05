@@ -33,7 +33,7 @@ updateTag:dropTag tag
 
 
 d=proc-macro-workshop
-f=$(shell ls $(d)/$(v1)/tests | grep 01 | awk -F '-' '/$(version)/ {print $0}')
+f=$(shell ls $(d)/$(v1)/tests | awk -F '-' '/$(v2)/ {print $0}')
 macro/test:
 	@echo running $(f)
 	@cd $(d)/$(v1) && cargo test
