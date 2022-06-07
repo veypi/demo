@@ -3,35 +3,20 @@
 // Copyright (C) 2022 veypi <veypi@qq.com>
 // 2022-06-05 17:33
 // Distributed under terms of the MIT license.
-// 07
-// 回顾在04 中实现的这两个方法
-// pub fn args(&mut self, args: Vec<String>) -> &mut Self {
-//     match &self.args {
-//         Some(v) => v.to_owned().extend(args),
-//         None => self.args = Some(args),
-//     };
-//     self
-// }
-// pub fn env(&mut self, env: Vec<String>) -> &mut Self {
-//     match &self.env {
-//         Some(v) => v.to_owned().extend(env),
-//         None => self.env = Some(env),
-//     };
-//     self
-// }
-// args 和env 调用是增加参数
-// 而在上个06中我们实现了动态增加方法， 但是统一设置成了替换
-// 07 就是要实现动态增加方法并且还是如上述形式去增加参数而不是替换全部的参数
-// 通过对字段进行属性标记实现
-//    #[builder(each = "arg")]
-// 标记each的字段我们可以视为是vec对象， 否则报错
+// 08
+// 本轮主要测试错误的生成, 比如当args 设置each参数为eac时报错
 
 use std::error::Error;
 use std::vec;
 
 use proc_macro::TokenStream;
+use proc_macro2::Span;
 use quote::{format_ident, quote};
 use syn::{parse_macro_input, DeriveInput};
+
+fn mk_compile_error<T: std::fmt::Display>(span: Span, msg: T) -> TokenStream {
+    syn::Error::new(span, msg).to_compile_error().into()
+}
 
 fn is_type(ty: syn::Type, n: &str) -> bool {
     match ty {
@@ -53,16 +38,16 @@ fn is_vec(ty: syn::Type) -> bool {
     is_type(ty, "Vec")
 }
 
-fn get_each(attrs: Vec<syn::Attribute>) -> String {
+fn get_each(field: syn::Field) -> Result<String, TokenStream> {
     let mut res = "".to_string();
     let mut ident = "".to_string();
-    for a in attrs {
+    for a in field.attrs.iter() {
         if a.path.segments.len() == 0 {
-            return "".to_owned();
+            return Ok("".to_owned());
         }
         let s1 = a.path.segments.first().unwrap();
         if s1.ident.to_string() == "builder" {
-            for t in a.tokens {
+            for t in a.tokens.clone() {
                 match t {
                     proc_macro2::TokenTree::Group(g) => {
                         let s = g.stream();
@@ -75,9 +60,13 @@ fn get_each(attrs: Vec<syn::Attribute>) -> String {
                         }
                         if ident == "each".to_string() {
                             if res != "".to_string() {
-                                return res.replace("\"", "");
+                                return Ok(res.replace("\"", ""));
                             }
-                            return "temp".to_string();
+                        } else {
+                            return Err(mk_compile_error(
+                                g.span(),
+                                "expected `builder(each = \"...\")`",
+                            ));
                         }
                     }
                     _ => {}
@@ -85,7 +74,7 @@ fn get_each(attrs: Vec<syn::Attribute>) -> String {
             }
         }
     }
-    return "".to_string();
+    return Ok("".to_owned());
 }
 
 fn get_sub_type(ty: syn::Type, n: &str) -> Result<syn::Type, Box<dyn Error>> {
@@ -125,7 +114,11 @@ pub fn derive(input: TokenStream) -> TokenStream {
             for f in v.fields {
                 let i = f.ident.clone();
                 let mut ty = f.ty.clone();
-                let each = get_each(f.attrs.clone());
+                let each = get_each(f.clone());
+                if let Err(err) = each {
+                    return err;
+                }
+                let each = each.unwrap();
                 let is_v = is_vec(ty.clone());
                 let is_opt = is_option(ty.clone());
                 if is_v {
