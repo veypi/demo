@@ -23,7 +23,7 @@ endif
 
 tag:
 	@git tag $(_tag)
-	@git push origin $(_tag)
+	@git push origin --tags
 
 dropTag:
 	@git tag -d $(_tag)
