@@ -3,31 +3,31 @@ v0=$(strip $(shell awk -F ':' '/tag0/ {print $$2;}' cfg.yml))
 v1=$(strip $(shell awk -F ':' '/tag1/ {print $$2;}' cfg.yml))
 v2=$(strip $(shell awk -F ':' '/tag2/ {print $$2;}' cfg.yml))
 
-tag=$(branch)-$(v0)-$(v1)-$(v2)
+_tag=$(branch)-$(v0)-$(v1)-$(v2)
 
 
 version:
-	@echo $(tag)
+	@echo $(_tag)
 
 tags:
 	@git tag -l | grep $(branch)
 
-tagname=$(strip $(t))
+_tagname=$(strip $(t))
 gotag:
-ifeq ($(tagname),)
-	@echo please use: make gotag t=TagName
+ifeq ($(_tagname),)
+	@echo please use: make gotag t=_tagname
 else
-	@echo checkout to tag $(tagname)
-	@git checkout -b $(tagname) $(tagname)
+	@echo checkout to tag $(_tagname)
+	@git checkout -b $(_tagname) $(_tagname)
 endif
 
 tag:
-	@git tag $(tag)
-	@git push origin $(tag)
+	@git tag $(_tag)
+	@git push origin $(_tag)
 
 dropTag:
-	@git tag -d $(tag)
-	@git push origin :refs/tags/$(tag)
+	@git tag -d $(_tag)
+	@git push origin :refs/tags/$(_tag)
 
 updateTag:dropTag tag
 
