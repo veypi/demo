@@ -3,8 +3,7 @@
 // Copyright (C) 2022 veypi <veypi@qq.com>
 // 2022-06-05 17:33
 // Distributed under terms of the MIT license.
-// 03 主要是为 CommandBuilder 实现build方法
-// 涉及到特征对象 Box<dyn Error>> 中 Error 特征未导入
+// 05 主要是为方法添加返回对象以方便链式调用 在04中已实现
 
 use proc_macro::TokenStream;
 use quote::quote;
