@@ -3,7 +3,8 @@
 // Copyright (C) 2022 veypi <veypi@qq.com>
 // 2022-06-08 14:55
 // Distributed under terms of the MIT license.
-// 02
+// 03
+// 为字段添加 debug 参数
 // 为结构体 派生fmt::Debug 特征
 // 在main.rs 派生了内置debug方法 对比参考写一个自己的
 
@@ -15,8 +16,32 @@ use syn::{parse_macro_input, DeriveInput};
 fn mk_compile_error<T: std::fmt::Display>(span: Span, msg: T) -> TokenStream {
     syn::Error::new(span, msg).to_compile_error().into()
 }
+fn get_debug(field: syn::Field) -> Result<String, TokenStream> {
+    for a in field.attrs.iter() {
+        if a.path.segments.len() == 0 {
+            return Ok("".to_owned());
+        }
+        let s1 = a.path.segments.first().unwrap();
+        if s1.ident.to_string() == "debug" {
+            for t in a.tokens.clone() {
+                match t {
+                    proc_macro2::TokenTree::Literal(g) => {
+                        let res = g.to_string();
+                        if res != "".to_string() {
+                            return Ok(res.replace("\"", ""));
+                        } else {
+                            return Err(mk_compile_error(g.span(), "expected debug= \"...\""));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+    return Ok("".to_owned());
+}
 
-#[proc_macro_derive(CustomDebug)]
+#[proc_macro_derive(CustomDebug, attributes(debug))]
 pub fn derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let src_ident = input.ident;
@@ -34,9 +59,20 @@ pub fn derive(input: TokenStream) -> TokenStream {
             self_matches.push(quote! {
                 #i: ref #i,
             });
-            format_lines.push(quote! {
-                let _ = ::core::fmt::DebugStruct::field(debug_trait_builder, #i_name, &&(*#i));
-            });
+            let debug_str = get_debug(f.clone());
+            if let Err(e) = debug_str {
+                return e;
+            }
+            let debug_str = debug_str.unwrap();
+            if debug_str != "".to_string() {
+                format_lines.push(quote! {
+                    let _ = ::core::fmt::DebugStruct::field(debug_trait_builder, #i_name, &format_args!(#debug_str, &&(*#i)));
+                });
+            } else {
+                format_lines.push(quote! {
+                    let _ = ::core::fmt::DebugStruct::field(debug_trait_builder, #i_name, &&(*#i));
+                });
+            }
         }
     } else {
         return mk_compile_error(
