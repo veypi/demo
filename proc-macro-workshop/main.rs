@@ -7,6 +7,11 @@
 //     $ cargo run
 
 use derive_builder::Builder;
+type Option = ();
+type Some = ();
+type None = ();
+type Result = ();
+type Box = ();
 
 #[derive(Builder)]
 pub struct Command {
@@ -19,7 +24,7 @@ pub struct Command {
     #[builder(each = "env")]
     env: Vec<String>,
 
-    current_dir: Option<String>,
+    current_dir: String,
 }
 
 fn main() {}

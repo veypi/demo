@@ -3,8 +3,8 @@
 // Copyright (C) 2022 veypi <veypi@qq.com>
 // 2022-06-05 17:33
 // Distributed under terms of the MIT license.
-// 08
-// 本轮主要测试错误的生成, 比如当args 设置each参数为eac时报错
+// 09
+// 考虑到常用函数被别名替换，所有使用prelude 预导入包时尽量使用包绝对引用路径而不是alias
 
 use std::error::Error;
 use std::vec;
@@ -123,7 +123,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 let is_opt = is_option(ty.clone());
                 if is_v {
                     builder_lines.push(quote! {
-                        #i: Vec::new(),
+                        #i: ::std::vec::Vec::new(),
                     });
                     command_builder_items.push(quote! {
                         #i: #ty,
@@ -152,7 +152,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 } else {
                     // 非vec对象皆转换为option对象
                     builder_lines.push(quote! {
-                        #i: None,
+                        #i: ::std::option::Option::None,
                     });
                     if is_opt {
                         command_builder_items.push(quote! {
@@ -173,7 +173,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                             });
                         }
                         command_builder_items.push(quote! {
-                            #i: Option<#ty>,
+                            #i: ::std::option::Option<#ty>,
                         });
                         build_ok.push(quote! {
                             #i: self.#i.as_ref().unwrap().to_owned(),
@@ -181,7 +181,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                     }
                     methods.push(quote! {
                         pub fn #i(&mut self, #i: #ty) -> &mut Self {
-                            self.#i = Some(#i);
+                            self.#i = ::std::option::Option::Some(#i);
                             self
                         }
                     });
@@ -194,12 +194,12 @@ pub fn derive(input: TokenStream) -> TokenStream {
     if build_if.len() != 0 {
         build.push(quote! {
             if #( #build_if )* {
-                return Err(Box::from("missing fields".to_owned()));
+                return ::std::result::Result::Err(::std::boxed::Box::from("missing fields".to_owned()));
             };
         });
     }
     build.push(quote! {
-        Ok(#ident {
+        ::std::result::Result::Ok(#ident {
             #( #build_ok )*
         })
     });
@@ -216,7 +216,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
         #( #command_builder_items )*
     }
     impl CommandBuilder {
-        pub fn build(&mut self) -> Result<#ident, Box<dyn std::error::Error>> {
+        pub fn build(&mut self) -> ::std::result::Result<#ident, ::std::boxed::Box<dyn std::error::Error>> {
              #(#build)*
         }
         #( #methods )*
