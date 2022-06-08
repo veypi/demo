@@ -13,6 +13,12 @@ type None = ();
 type Result = ();
 type Box = ();
 
+#[derive(Debug)]
+pub struct FieldTest {
+    name: &'static str,
+    bitmask: u16,
+}
+
 #[derive(CustomDebug)]
 pub struct Field {
     name: &'static str,

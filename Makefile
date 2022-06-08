@@ -39,5 +39,6 @@ macro/test:
 	@cd $(d)/$(v1) && cargo test
 
 macro/expand:
-	@cd $(d) && cargo expand
+	## 展开代码到expand_code， 方便debug, 默认不导入前7行
+	@cd $(d) && cargo expand | sed -ne '7,$$p' > expand_code/src/main.rs && cd expand_code &&vim src/main.rs
 
