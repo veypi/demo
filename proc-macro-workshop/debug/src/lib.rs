@@ -3,10 +3,8 @@
 // Copyright (C) 2022 veypi <veypi@qq.com>
 // 2022-06-08 14:55
 // Distributed under terms of the MIT license.
-// 03
-// 为字段添加 debug 参数
-// 为结构体 派生fmt::Debug 特征
-// 在main.rs 派生了内置debug方法 对比参考写一个自己的
+// 04
+// 对结构体增加泛型支持
 
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -46,8 +44,26 @@ pub fn derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let src_ident = input.ident;
     let src_name = src_ident.to_string();
+    let src_generics = input.generics;
     let mut self_matches = Vec::new();
     let mut format_lines = Vec::new();
+    let mut impl_generics = quote!();
+    let mut where_generics = quote!();
+    if src_generics.params.len() != 0 {
+        let mut temp = Vec::new();
+        for g in src_generics.params {
+            if let syn::GenericParam::Type(syn::TypeParam { ref ident, .. }) = g {
+                temp.push(quote! { #ident });
+            }
+        }
+        impl_generics = quote! {
+            <#( #temp, )*>
+        };
+        where_generics = quote! {
+            where
+                #( #temp: ::core::fmt::Debug, )*
+        };
+    }
     if let syn::Data::Struct(syn::DataStruct {
         fields: syn::Fields::Named(syn::FieldsNamed { ref named, .. }),
         ..
@@ -80,20 +96,25 @@ pub fn derive(input: TokenStream) -> TokenStream {
             "This Builder can just be applied to structs with named fields",
         );
     }
+    // impl<T> ::core::fmt::Debug for #src_ident<T>
+    // where
+    //     T: ::core::fmt::Debug
 
     quote! {
-        impl ::core::fmt::Debug for #src_ident {
-        fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-            match *self {
-                Self{
-                    #( #self_matches )*
-                }=> {
-                let debug_trait_builder = &mut ::core::fmt::Formatter::debug_struct(f, #src_name);
-                #( #format_lines )*
-                ::core::fmt::DebugStruct::finish(debug_trait_builder)
+        impl #impl_generics  ::core::fmt::Debug for #src_ident #impl_generics
+            #where_generics
+        {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+                match *self {
+                    Self{
+                        #( #self_matches )*
+                    }=> {
+                    let debug_trait_builder = &mut ::core::fmt::Formatter::debug_struct(f, #src_name);
+                    #( #format_lines )*
+                    ::core::fmt::DebugStruct::finish(debug_trait_builder)
+                    }
                 }
             }
-        }
         }
     }
     .into()

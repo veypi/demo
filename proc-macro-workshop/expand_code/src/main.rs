@@ -1,17 +1,21 @@
-pub struct Field {
-    name: &'static str,
+pub struct Field<T, V> {
+    value: T,
     #[debug = "0b{:08b}"]
-    bitmask: u16,
+    bitmask: V,
 }
-impl ::core::fmt::Debug for Field {
+impl<T, V> ::core::fmt::Debug for Field<T, V>
+where
+    T: ::core::fmt::Debug,
+    V: ::core::fmt::Debug,
+{
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         match *self {
             Self {
-                name: ref name,
+                value: ref value,
                 bitmask: ref bitmask,
             } => {
                 let debug_trait_builder = &mut ::core::fmt::Formatter::debug_struct(f, "Field");
-                let _ = ::core::fmt::DebugStruct::field(debug_trait_builder, "name", &&(*name));
+                let _ = ::core::fmt::DebugStruct::field(debug_trait_builder, "value", &&(*value));
                 let _ = ::core::fmt::DebugStruct::field(
                     debug_trait_builder,
                     "bitmask",
