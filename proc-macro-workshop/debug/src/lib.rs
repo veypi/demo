@@ -39,6 +39,42 @@ fn get_debug(field: syn::Field) -> Result<String, TokenStream> {
     return Ok("".to_owned());
 }
 
+fn has_generics(ty: syn::Type, g: Vec<String>) -> bool {
+    if g.len() == 0 {
+        return false;
+    }
+    if let syn::Type::Path(syn::TypePath {
+        path: syn::Path { segments, .. },
+        ..
+    }) = ty
+    {
+        if segments.len() == 0 {
+            return false;
+        }
+        for s in segments {
+            if g.contains(&s.ident.to_string()) {
+                return true;
+            }
+            if let syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments {
+                args,
+                ..
+            }) = s.arguments
+            {
+                if args.len() > 0 {
+                    for a in args {
+                        if let syn::GenericArgument::Type(t) = a {
+                            if has_generics(t, g.clone()) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
 #[proc_macro_derive(CustomDebug, attributes(debug))]
 pub fn derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -48,22 +84,20 @@ pub fn derive(input: TokenStream) -> TokenStream {
     let mut self_matches = Vec::new();
     let mut format_lines = Vec::new();
     let mut impl_generics = quote!();
-    let mut where_generics = quote!();
+    let mut generics = Vec::new();
+    let mut g_str = Vec::new();
     if src_generics.params.len() != 0 {
-        let mut temp = Vec::new();
         for g in src_generics.params {
             if let syn::GenericParam::Type(syn::TypeParam { ref ident, .. }) = g {
-                temp.push(quote! { #ident });
+                g_str.push(ident.to_string());
+                generics.push(quote! { #ident });
             }
         }
         impl_generics = quote! {
-            <#( #temp, )*>
-        };
-        where_generics = quote! {
-            where
-                #( #temp: ::core::fmt::Debug, )*
+            <#( #generics, )*>
         };
     }
+    let mut generics = Vec::new();
     if let syn::Data::Struct(syn::DataStruct {
         fields: syn::Fields::Named(syn::FieldsNamed { ref named, .. }),
         ..
@@ -72,6 +106,12 @@ pub fn derive(input: TokenStream) -> TokenStream {
         for f in named {
             let i = f.ident.clone().unwrap();
             let i_name = i.to_string();
+            let ty = f.ty.clone();
+            if has_generics(ty.clone(), g_str.clone()) {
+                generics.push(quote! {
+                    #ty
+                })
+            }
             self_matches.push(quote! {
                 #i: ref #i,
             });
@@ -99,6 +139,13 @@ pub fn derive(input: TokenStream) -> TokenStream {
     // impl<T> ::core::fmt::Debug for #src_ident<T>
     // where
     //     T: ::core::fmt::Debug
+    let mut where_generics = quote!();
+    if generics.len() > 0 {
+        where_generics = quote! {
+            where
+                #( #generics: ::core::fmt::Debug, )*
+        };
+    }
 
     quote! {
         impl #impl_generics  ::core::fmt::Debug for #src_ident #impl_generics
