@@ -27,7 +27,7 @@ version:
 	@echo $(_tag)
 
 tags:
-ifeq ($(branch),master)
+ifeq ($(branch),main)
 	@git tag -l | grep ''
 else
 	@git tag -l | grep $(branch)
