@@ -1,10 +1,10 @@
 # rust 加解密
 
-[github](https://github.com/RustCrypto/traits) [doc](https://docs.rs/crypto/latest/crypto/)
-
-
+[HOME](https://github.com/veypi/demo)
 
 ## [RustCrypto 项目](https://github.com/RustCrypto)
+
+[github](https://github.com/RustCrypto/traits) [doc](https://docs.rs/crypto/latest/crypto/)
 
 Rustcrypto 是一个单独发布的密码库特征集，其中包含许多不同类型的加密算法的traits。
 

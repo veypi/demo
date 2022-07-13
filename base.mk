@@ -27,7 +27,11 @@ version:
 	@echo $(_tag)
 
 tags:
+ifeq ($(branch),main)
+	@git tag -l | grep ''
+else
 	@git tag -l | grep $(branch)
+endif
 
 _tagname=$(strip $(t))
 gotag:
