@@ -5,6 +5,6 @@
 # Distributed under terms of the Apache license.
 #
 
-include ./base.Makefile
+include ./base.mk
 
 
