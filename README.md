@@ -35,3 +35,8 @@ Rustcrypto 是一个单独发布的密码库特征集，其中包含许多不同
 make gotag t=rust-encroption-aes_gcm
 ```
 
+
+
+### Padding
+
+在加密中我们经常需要填充块，encrypto中已经写了相应的填充算法，https://github.com/RustCrypto/utils

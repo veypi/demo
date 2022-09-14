@@ -8,6 +8,7 @@
 use aes_gcm::aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Key, Nonce}; // Or `Aes128Gcm`
 fn main() {
+    // 秘钥需要32位
     let key = Key::from_slice(b"an example very very secret key.");
     let cipher = Aes256Gcm::new(key);
 
